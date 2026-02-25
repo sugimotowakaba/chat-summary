@@ -36,6 +36,8 @@ const pageStore = new Map();
 // 報告ログの重複処理防止（Slack再送対策）
 const processedReportMessages = new Map();
 const REPORT_DEDUP_TTL_MS = 6 * 60 * 60 * 1000;
+// チャンネルごとの直前コンテキスト（会社名・グループ名、メッセージをまたいだ引き継ぎ用）
+const lastContextByChannel = new Map();
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -164,7 +166,8 @@ app.message(async ({ message, client, logger }) => {
 
   try {
     const userName = await resolveUserName(client, message.user);
-    const items = await parseReport(text, userName);
+    const lastContext = lastContextByChannel.get(message.channel) || null;
+    const items = await parseReport(text, userName, lastContext);
 
     if (items.length === 0) {
       logger.info(`[report-detect] パース結果: 報告アイテムなし`);
@@ -213,6 +216,9 @@ app.message(async ({ message, client, logger }) => {
 
     let loggedCount = 0;
     for (const item of items) {
+      if (item.company && item.company !== '不明') {
+        lastContextByChannel.set(message.channel, { company: item.company, group: item.group || null });
+      }
       try {
         await addReportLog(item, slackUrl, date, { databaseId: reportLogDatabaseId });
         loggedCount++;

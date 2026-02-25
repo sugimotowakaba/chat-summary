@@ -112,6 +112,7 @@ async function main() {
   console.log(`取得件数: ${messages.length}`);
 
   const userCache = new Map();
+  let lastContext = null; // { company, group }
   let scanned = 0;
   let reportLike = 0;
   let parsedReports = 0;
@@ -147,12 +148,15 @@ async function main() {
       }
     }
 
-    const items = await parseReport(text, userName);
+    const items = await parseReport(text, userName, lastContext);
     if (!items.length) continue;
     parsedReports++;
     const date = new Date(parseFloat(msg.ts) * 1000).toISOString().slice(0, 10);
 
     for (const item of items) {
+      if (item.company && item.company !== '不明') {
+        lastContext = { company: item.company, group: item.group || null };
+      }
       if (!dryRun) {
         await addReportLog(item, slackUrl, date, { databaseId });
       }

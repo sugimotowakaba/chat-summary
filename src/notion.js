@@ -169,9 +169,14 @@ async function addReportLog(item, slackUrl, date, options = {}) {
     info: '情報共有',
   };
 
+  const titleParts = [item.company];
+  if (item.group) titleParts.push(item.group);
+  titleParts.push(item.product);
+  const titleText = titleParts.join(' / ');
+
   const properties = {
     [titlePropName]: {
-      title: [{ text: { content: `${item.customer} / ${item.product}` } }],
+      title: [{ text: { content: titleText } }],
     },
   };
 
@@ -180,6 +185,17 @@ async function addReportLog(item, slackUrl, date, options = {}) {
   if (typeProp) properties[typeProp] = { select: { name: typeLabels[item.type] || item.type } };
   if (detailProp) properties[detailProp] = { rich_text: [{ text: { content: item.detail || '' } }] };
   if (slackProp) properties[slackProp] = { url: slackUrl };
+
+  // 会社名・グループ名・品物名（列があれば）
+  if (schema.companyProp && item.company) {
+    properties[schema.companyProp] = { rich_text: [{ text: { content: item.company } }] };
+  }
+  if (schema.groupProp && item.group) {
+    properties[schema.groupProp] = { rich_text: [{ text: { content: item.group } }] };
+  }
+  if (schema.productProp && item.product) {
+    properties[schema.productProp] = { rich_text: [{ text: { content: item.product } }] };
+  }
 
   // アレルゲンがある場合のみ追加
   if (item.allergen && allergenProp) {
@@ -216,6 +232,9 @@ function getReportLogSchema(db) {
     detailProp: findPropertyName(dbProps, ['詳細', 'Detail'], 'rich_text'),
     slackProp: findPropertyName(dbProps, ['Slack', 'URL', 'Link'], 'url'),
     allergenProp: findPropertyName(dbProps, ['アレルゲン', 'Allergen'], 'rich_text'),
+    companyProp: findPropertyName(dbProps, ['会社名', 'Company'], 'rich_text'),
+    groupProp: findPropertyName(dbProps, ['グループ名', 'Group'], 'rich_text'),
+    productProp: findPropertyName(dbProps, ['品物名', '商品名', 'Product'], 'rich_text'),
   };
 }
 

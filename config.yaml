@@ -42,7 +42,7 @@ report_reactions:
 # 報告ログDBのルーティング設定（任意）
 # 優先順位: tools > channels > default > NOTION_REPORT_LOG_DB_ID
 report_log_databases:
-  default: 312d6ee5c20680cb8817efaf906b9f17
+  default: 312d6ee5c20680788727de3bd135a1f7
   tools:
-    report_detect: 312d6ee5c20680cb8817efaf906b9f17
+    report_detect: 312d6ee5c20680788727de3bd135a1f7
   channels: {}
